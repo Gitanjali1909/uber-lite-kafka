@@ -1,18 +1,17 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from utils.geo import haversine_m, grid_key
 import json, time
 from kafka import KafkaConsumer, KafkaProducer
 import redis
-from utils.geo import haversine_m, grid_key
 from datetime import datetime, timezone
 
-# -------- CONFIG ----------
 KAFKA_BOOTSTRAP = "localhost:9092"
 REDIS_HOST = "localhost"
 SURGE_THRESHOLD = 12   # pings per minute in a grid -> alert
 
-# -------- REDIS ----------
 r = redis.StrictRedis(host=REDIS_HOST, port=6379, decode_responses=True)
 
-# -------- KAFKA ----------
 consumer = KafkaConsumer(
     "rides",
     bootstrap_servers=[KAFKA_BOOTSTRAP],

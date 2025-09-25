@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.1
@@ -15,13 +16,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-
-      # Listeners
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
-
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
@@ -30,3 +28,20 @@ services:
     image: redis:7.2-alpine
     ports:
       - "6379:6379"
+
+  producer:
+    build: ./producer
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: kafka:29092
+      REDIS_HOST: redis
+
+  consumer:
+    build: ./consumer
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      KAFKA_BROKER: kafka:29092
+      REDIS_HOST: redis

@@ -1,29 +1,39 @@
-import streamlit as st
 import importlib.util
-import os
-from streamlit_autorefresh import st_autorefresh
+import sys
+from pathlib import Path
+import streamlit as st
 
-st.set_page_config(page_title="Uber-Lite Dashboard", layout="wide")
-
-# Auto-refresh every 5 sec
-st_autorefresh(interval=5000, key="refresh")
-
-# Dynamically load pages
-def load_page(path):
-    spec = importlib.util.spec_from_file_location("page", path)
+def import_module_from_path(path):
+    spec = importlib.util.spec_from_file_location(path.stem, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[path.stem] = mod
     spec.loader.exec_module(mod)
     return mod
 
-# Page registry
-base_path = os.path.join(os.path.dirname(__file__), "pages")
-pages = {
-    "Overview": os.path.join(base_path, "overview.py"),
-    "Analytics": os.path.join(base_path, "analytics.py"),
-    "Alerts": os.path.join(base_path, "alerts.py")
+pages_path = Path(__file__).parent / "_pages"
+overview = import_module_from_path(pages_path / "overview.py")
+analytics = import_module_from_path(pages_path / "analytics.py")
+alerts = import_module_from_path(pages_path / "alerts.py")
+
+PAGES = {
+    "Overview": overview,
+    "Analytics": analytics,
+    "Alerts": alerts
 }
 
-# Horizontal nav → no sidebar
-page_name = st.radio("Navigate", list(pages.keys()), horizontal=True)
-page_module = load_page(pages[page_name])
-page_module.show()
+st.set_page_config(layout="wide")
+
+st.markdown("""
+<style>
+    .stRadio > label { font-size: 1.2em; font-weight: bold; padding: 0.5em 1em; border-radius: 0.5em; margin-right: 1em; cursor: pointer; transition: all 0.2s ease-in-out; }
+    .stRadio > label:hover { background-color: #f0f2f6; }
+    .stRadio > label[data-baseweb="radio"] > div:first-child { display: none; }
+    .stRadio > label[data-baseweb="radio"] { border: 1px solid #e0e0e0; }
+    .stRadio > label[data-baseweb="radio"][aria-checked="true"] { background-color: #007bff; color: white; border-color: #007bff; }
+</style>
+""", unsafe_allow_html=True)
+
+st.write("## Uber-Lite Dashboard")
+selection = st.radio("Go to", list(PAGES.keys()), horizontal=True)
+page = PAGES[selection]
+page.show()

@@ -1,0 +1,6 @@
+kafka-python
+redis
+streamlit
+pandas
+pydeck
+geographiclib
